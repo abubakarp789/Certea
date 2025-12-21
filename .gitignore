@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+venv/
+env/
+.env
+
+# Secrets and Keys
+keys/
+*.pem
+*.key
+*.p12
+
+# Logs and Data
+data/
+*.log
+verification_logs.json
+signature.json
+
+# IDE and Project specific
+.vscode/
+.idea/
+.kiro
+.pytest_cache/
