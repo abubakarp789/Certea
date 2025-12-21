@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signature Validator</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="glass">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Cyber<span>Sign</span>
+        </div>
+
+        <button class="nav-btn active" onclick="switchView('home')">
+            <span>🏠</span> Dashboard
+        </button>
+        <button class="nav-btn" onclick="switchView('generate')">
+            <span>🔑</span> Key Generator
+        </button>
+        <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
+        <button class="nav-btn" onclick="switchView('sign-text')">
+            <span>✍️</span> Sign Text
+        </button>
+        <button class="nav-btn" onclick="switchView('verify-text')">
+            <span>🔍</span> Verify Text
+        </button>
+        <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
+        <button class="nav-btn" onclick="switchView('sign-file')">
+            <span>📄</span> Sign File
+        </button>
+        <button class="nav-btn" onclick="switchView('verify-file')">
+            <span>📋</span> Verify File
+        </button>
+        <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
+        <button class="nav-btn" onclick="switchView('ca')">
+            <span>🏛️</span> Certificate Authority
+        </button>
+        <button class="nav-btn" onclick="switchView('logs')">
+            <span>📜</span> Audit Logs
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content">
+
+        <!-- View: Home (Revamped) -->
+        <div id="view-home" class="view">
+            <div class="hero-section">
+                <h1>Secure Digital Operations</h1>
+                <p class="hero-intro">Advanced cryptographic toolset for secure communications and document integrity.
+                    Powered by RSA-2048/4096 & SHA-256.</p>
+
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="card-icon" style="font-size: 1.2rem; padding: 0.5rem;">🔒</div>
+                        <div>
+                            <div class="stat-val">RSA-PSS</div>
+                            <div class="stat-label">Algorithm</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="card-icon"
+                            style="font-size: 1.2rem; padding: 0.5rem; color: var(--success); background: rgba(16, 185, 129, 0.1);">
+                            ✓</div>
+                        <div>
+                            <div class="stat-val">Online</div>
+                            <div class="stat-label">System Status</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="card-icon"
+                            style="font-size: 1.2rem; padding: 0.5rem; color: #a855f7; background: rgba(168, 85, 247, 0.1);">
+                            ⚡</div>
+                        <div>
+                            <div class="stat-val">Ready</div>
+                            <div class="stat-label">Core Engine</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Generating Keys Card -->
+                <div class="feature-card" onclick="switchView('generate')">
+                    <div class="card-icon">🔑</div>
+                    <h3 class="card-title">Key Management</h3>
+                    <p class="card-desc">Generate cryptographically secure RSA public and private key pairs (up to 4096
+                        bits).</p>
+                </div>
+
+                <!-- Sign File Card -->
+                <div class="feature-card" onclick="switchView('sign-file')">
+                    <div class="card-icon">🔐</div>
+                    <h3 class="card-title">Sign Documents</h3>
+                    <p class="card-desc">Apply digital signatures to PDF, DOCX, or any arbitrary file to prove
+                        authorship.</p>
+                </div>
+
+                <!-- Verify File Card -->
+                <div class="feature-card" onclick="switchView('verify-file')">
+                    <div class="card-icon">🛡️</div>
+                    <h3 class="card-title">Verify Integrity</h3>
+                    <p class="card-desc">Check if a received file has been tampered with or modified by verifying its
+                        signature.</p>
+                </div>
+
+                <!-- CA Ops Card -->
+                <div class="feature-card" onclick="switchView('ca')">
+                    <div class="card-icon">🏛️</div>
+                    <h3 class="card-title">Certificate Authority</h3>
+                    <p class="card-desc">Act as a Root CA to issue and validate identity certificates for your
+                        organization.</p>
+                </div>
+
+                <!-- Audit Logs Card -->
+                <div class="feature-card" onclick="switchView('logs')">
+                    <div class="card-icon">📜</div>
+                    <h3 class="card-title">Audit Logs</h3>
+                    <p class="card-desc">View detailed transaction history of all verification attempts on this server.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Generate Keys -->
+        <div id="view-generate" class="view hidden">
+            <h1>Generate Keys</h1>
+            <p class="subtitle">Create a new RSA public/private key pair.</p>
+
+            <div class="glass glass-panel">
+                <form id="generate-form">
+                    <div class="form-group">
+                        <label>Passphrase (Optional)</label>
+                        <input type="password" id="gen-passphrase" placeholder="Protect your private key...">
+                    </div>
+                    <div class="form-group">
+                        <label>Key Size</label>
+                        <select id="gen-size">
+                            <option value="2048">2048 bits (Standard)</option>
+                            <option value="4096">4096 bits (High Security)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Keys</button>
+                </form>
+
+                <div id="gen-result" class="result-box hidden">
+                    <h3>Keys Generated Successfully!</h3>
+                    <p style="margin-bottom: 1rem;">Click below to save them securely.</p>
+                    <button class="btn btn-secondary" onclick="downloadKeys()">Download Key Pair (.zip)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Sign Text -->
+        <div id="view-sign-text" class="view hidden">
+            <h1>Sign Text</h1>
+            <p class="subtitle">Create a digital signature for a text message.</p>
+            <div class="glass glass-panel">
+                <form id="sign-text-form">
+                    <div class="form-group">
+                        <label>Private Key</label>
+                        <div class="file-drop-area" id="sign-text-drop">
+                            <span class="file-msg">Drag & drop private_key.pem here or click to browse</span>
+                            <input type="file" id="sign-text-key" accept=".pem">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Passphrase (if key is encrypted)</label>
+                        <input type="password" id="sign-text-pass">
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="sign-text-msg" rows="4" placeholder="Enter message to sign..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Message</button>
+                </form>
+
+                <div id="sign-text-result" class="result-box hidden">
+                    <label>Signature (Hex)</label>
+                    <button class="copy-btn" onclick="copyToClipboard('sign-text-out')">Copy</button>
+                    <pre id="sign-text-out"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Verify Text -->
+        <div id="view-verify-text" class="view hidden">
+            <h1>Verify Text</h1>
+            <p class="subtitle">Verify authenticity of a signed text message.</p>
+            <div class="glass glass-panel">
+                <form id="verify-text-form">
+                    <div class="form-group">
+                        <label>Public Key</label>
+                        <div class="file-drop-area" id="verify-text-drop">
+                            <span class="file-msg">Drag & drop public_key.pem here or click to browse</span>
+                            <input type="file" id="verify-text-key" accept=".pem">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Original Message</label>
+                        <textarea id="verify-text-msg" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Signature (Hex)</label>
+                        <input type="text" id="verify-text-sig">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Verify Signature</button>
+                </form>
+
+                <div id="verify-text-result" class="result-box hidden">
+                    <h2 id="verify-text-status"></h2>
+                    <p id="verify-text-details"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Sign File -->
+        <div id="view-sign-file" class="view hidden">
+            <h1>Sign File</h1>
+            <p class="subtitle">Create a digital signature for any file (PDF, Image, etc.).</p>
+            <div class="glass glass-panel">
+                <form id="sign-file-form">
+                    <div class="form-group">
+                        <label>Private Key</label>
+                        <div class="file-drop-area" id="sign-file-key-drop">
+                            <span class="file-msg">Drop Private Key here</span>
+                            <input type="file" id="sign-file-key" accept=".pem" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>File to Sign</label>
+                        <div class="file-drop-area" id="sign-file-doc-drop">
+                            <span class="file-msg">Drop Document/File here</span>
+                            <input type="file" id="sign-file-doc" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Passphrase</label>
+                        <input type="password" id="sign-file-pass">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign File</button>
+                </form>
+
+                <div id="sign-file-result" class="result-box hidden">
+                    <label>Generated Signature (Hex)</label>
+                    <button class="copy-btn" onclick="copyToClipboard('sign-file-out')">Copy</button>
+                    <pre id="sign-file-out" style="max-height: 100px; overflow-y: auto;"></pre>
+                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary)">SHA-256 Digest: <span
+                            id="sign-file-digest"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Verify File -->
+        <div id="view-verify-file" class="view hidden">
+            <h1>Verify File</h1>
+            <p class="subtitle">Check if a file has been modified since it was signed.</p>
+            <div class="glass glass-panel">
+                <form id="verify-file-form">
+                    <div class="form-group">
+                        <label>Public Key</label>
+                        <div class="file-drop-area" id="verify-file-key-drop">
+                            <span class="file-msg">Drop Public Key here</span>
+                            <input type="file" id="verify-file-key" accept=".pem" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Original File</label>
+                        <div class="file-drop-area" id="verify-file-doc-drop">
+                            <span class="file-msg">Drop Document/File here</span>
+                            <input type="file" id="verify-file-doc" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Signature (Hex String)</label>
+                        <input type="text" id="verify-file-sig" placeholder="Paste the long signature string here..."
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Verify Integrity</button>
+                </form>
+
+                <div id="verify-file-result" class="result-box hidden">
+                    <h2 id="verify-file-status"></h2>
+                    <p id="verify-file-details"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Certificate Authority -->
+        <div id="view-ca" class="view hidden">
+            <h1>Certificate Authority</h1>
+            <p class="subtitle">Manage trusted certificates and identities.</p>
+
+            <div class="glass glass-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('ca-create')">Create CA</button>
+                    <button class="tab-btn" onclick="switchTab('ca-sign')">Issue Cert</button>
+                    <button class="tab-btn" onclick="switchTab('ca-verify')">Verify Cert</button>
+                </div>
+
+                <!-- CA Tab: Create -->
+                <div id="tab-ca-create" class="tab-content">
+                    <form id="ca-create-form">
+                        <div class="form-group">
+                            <label>CA Name</label>
+                            <input type="text" id="ca-name" value="My Secure CA">
+                        </div>
+                        <div class="form-group">
+                            <label>Passphrase</label>
+                            <input type="password" id="ca-pass" placeholder="Protect CA private key">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Initialize CA</button>
+                    </form>
+                    <div id="ca-create-result" class="result-box hidden">
+                        <h3>CA Created!</h3>
+                        <p>Download your Root CA keys below.</p>
+                        <pre id="ca-keys-out" class="hidden"></pre>
+                        <button class="btn btn-secondary" onclick="downloadKeys(true)">Download CA Keys</button>
+                    </div>
+                </div>
+
+                <!-- CA Tab: Sign -->
+                <div id="tab-ca-sign" class="tab-content hidden">
+                    <form id="ca-sign-form">
+                        <div class="form-group">
+                            <label>Subject Name</label>
+                            <input type="text" id="cert-subject" placeholder="e.g. Alice or server.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject Public Key</label>
+                            <div class="file-drop-area" id="cert-sub-key-drop">
+                                <span class="file-msg">Drop User's Public Key</span>
+                                <input type="file" id="cert-sub-key" accept=".pem" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>CA Private Key</label>
+                            <div class="file-drop-area" id="cert-ca-key-drop">
+                                <span class="file-msg">Drop CA Private Key</span>
+                                <input type="file" id="cert-ca-key" accept=".pem" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>CA Passphrase</label>
+                            <input type="password" id="cert-ca-pass">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Issue Certificate</button>
+                    </form>
+                    <div id="ca-sign-result" class="result-box hidden">
+                        <h3>Certificate Issued</h3>
+                        <button class="btn btn-secondary" onclick="downloadCert()">Download Certificate (.json)</button>
+                    </div>
+                </div>
+
+                <!-- CA Tab: Verify -->
+                <div id="tab-ca-verify" class="tab-content hidden">
+                    <form id="ca-verify-form">
+                        <div class="form-group">
+                            <label>Certificate File</label>
+                            <div class="file-drop-area" id="cert-file-drop">
+                                <span class="file-msg">Drop Certificate (.json)</span>
+                                <input type="file" id="cert-file" accept=".json" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>CA Public Key</label>
+                            <div class="file-drop-area" id="cert-verify-ca-drop">
+                                <span class="file-msg">Drop CA Public Key</span>
+                                <input type="file" id="cert-verify-ca" accept=".pem" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Verify Validity</button>
+                    </form>
+                    <div id="ca-verify-result" class="result-box hidden">
+                        <h2 id="cert-status"></h2>
+                        <p id="cert-details"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Audit Logs -->
+        <div id="view-logs" class="view hidden">
+            <h1>Audit Logs</h1>
+            <p class="subtitle">History of all verification attempts.</p>
+            <div class="glass glass-panel">
+                <button class="btn btn-secondary" onclick="loadLogs()">Refresh Logs</button>
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Status</th>
+                            <th>Message ID</th>
+                            <th>Signature ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

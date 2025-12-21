@@ -26,3 +26,6 @@ signature.json
 .idea/
 .kiro
 .pytest_cache/
+
+plan.md
+
