@@ -10,6 +10,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+# Load environment configuration
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Default size limits from environment
+MAX_FILE_SIZE_MB = int(os.getenv('MAX_FILE_SIZE_MB', '1024'))
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+MAX_MESSAGE_LENGTH = int(os.getenv('MAX_MESSAGE_LENGTH', '10485760'))
+
 
 class ValidationError(Exception):
     """Exception raised for validation errors."""
@@ -305,3 +317,76 @@ def validate_padding_scheme(padding: str) -> str:
         )
     
     return padding_upper
+
+
+def validate_file_size(size_bytes: int, max_size_mb: Optional[int] = None) -> int:
+    """
+    Validate file size against maximum limit.
+    
+    Args:
+        size_bytes: File size in bytes
+        max_size_mb: Maximum size in MB (defaults to env MAX_FILE_SIZE_MB)
+        
+    Returns:
+        The validated size in bytes
+        
+    Raises:
+        ValidationError: If file size exceeds limit
+    """
+    if not isinstance(size_bytes, int) or size_bytes < 0:
+        raise ValidationError("File size must be a non-negative integer")
+    
+    max_bytes = (max_size_mb * 1024 * 1024) if max_size_mb else MAX_FILE_SIZE_BYTES
+    
+    if size_bytes > max_bytes:
+        max_mb = max_size_mb or MAX_FILE_SIZE_MB
+        actual_mb = size_bytes / (1024 * 1024)
+        raise ValidationError(
+            f"File size ({actual_mb:.2f}MB) exceeds maximum allowed ({max_mb}MB)"
+        )
+    
+    return size_bytes
+
+
+def validate_message_length(message: str, max_length: Optional[int] = None) -> str:
+    """
+    Validate message length against maximum limit.
+    
+    Args:
+        message: Message to validate
+        max_length: Maximum length (defaults to env MAX_MESSAGE_LENGTH)
+        
+    Returns:
+        The validated message
+        
+    Raises:
+        ValidationError: If message length exceeds limit
+    """
+    if not isinstance(message, str):
+        raise ValidationError("Message must be a string")
+    
+    max_len = max_length or MAX_MESSAGE_LENGTH
+    
+    if len(message) > max_len:
+        raise ValidationError(
+            f"Message length ({len(message)}) exceeds maximum allowed ({max_len})"
+        )
+    
+    return message
+
+
+def validate_request_size(content_length: int, max_size_mb: Optional[int] = None) -> int:
+    """
+    Validate HTTP request content length.
+    
+    Args:
+        content_length: Content-Length header value
+        max_size_mb: Maximum size in MB
+        
+    Returns:
+        The validated content length
+        
+    Raises:
+        ValidationError: If content length exceeds limit
+    """
+    return validate_file_size(content_length, max_size_mb)

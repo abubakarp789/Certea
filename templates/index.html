@@ -4,17 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Digital Signature Validator - Secure digital signing and verification tool">
     <title>Digital Signature Validator</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/dark-mode.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400&display=swap"
         rel="stylesheet">
 </head>
 
 <body>
+    <!-- Skip to main content (accessibility) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Dark Mode Toggle -->
+    <button id="dark-mode-toggle" class="dark-mode-toggle" aria-label="Toggle dark mode" title="Toggle dark mode (Ctrl+D)">☀️</button>
 
     <!-- Sidebar Navigation -->
-    <nav id="sidebar" class="glass">
+    <nav id="sidebar" class="glass" role="navigation" aria-label="Main navigation">
         <div class="logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -24,37 +31,37 @@
             Cyber<span>Sign</span>
         </div>
 
-        <button class="nav-btn active" onclick="switchView('home')">
-            <span>🏠</span> Dashboard
+        <button class="nav-btn active" onclick="switchView('home')" aria-current="page">
+            <span aria-hidden="true">🏠</span> Dashboard
         </button>
-        <button class="nav-btn" onclick="switchView('generate')">
-            <span>🔑</span> Key Generator
+        <button class="nav-btn" onclick="switchView('generate')" title="Ctrl+G">
+            <span aria-hidden="true">🔑</span> Key Generator <span class="shortcut-hint">Ctrl+G</span>
         </button>
         <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
-        <button class="nav-btn" onclick="switchView('sign-text')">
-            <span>✍️</span> Sign Text
+        <button class="nav-btn" onclick="switchView('sign-text')" title="Ctrl+S">
+            <span aria-hidden="true">✍️</span> Sign Text <span class="shortcut-hint">Ctrl+S</span>
         </button>
-        <button class="nav-btn" onclick="switchView('verify-text')">
-            <span>🔍</span> Verify Text
+        <button class="nav-btn" onclick="switchView('verify-text')" title="Ctrl+V">
+            <span aria-hidden="true">🔍</span> Verify Text
         </button>
         <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
         <button class="nav-btn" onclick="switchView('sign-file')">
-            <span>📄</span> Sign File
+            <span aria-hidden="true">📄</span> Sign File
         </button>
         <button class="nav-btn" onclick="switchView('verify-file')">
-            <span>📋</span> Verify File
+            <span aria-hidden="true">📋</span> Verify File
         </button>
         <div style="height: 1px; background: var(--glass-border); margin: 1rem 0;"></div>
         <button class="nav-btn" onclick="switchView('ca')">
-            <span>🏛️</span> Certificate Authority
+            <span aria-hidden="true">🏛️</span> Certificate Authority
         </button>
         <button class="nav-btn" onclick="switchView('logs')">
-            <span>📜</span> Audit Logs
+            <span aria-hidden="true">📜</span> Audit Logs
         </button>
     </nav>
 
     <!-- Main Content Area -->
-    <main id="main-content">
+    <main id="main-content" role="main">
 
         <!-- View: Home (Revamped) -->
         <div id="view-home" class="view">
@@ -417,9 +424,31 @@
     </main>
 
     <!-- Toast Container -->
-    <div id="toast-container"></div>
+    <div id="toast-container" role="alert" aria-live="polite"></div>
 
+    <script src="/static/js/utils.js"></script>
     <script src="/static/js/app.js"></script>
+    <script>
+        // Initialize utilities
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize dark mode
+            CyberSignUtils.initDarkMode();
+            
+            // Initialize keyboard shortcuts
+            CyberSignUtils.initKeyboardShortcuts();
+            
+            // Set up dark mode toggle
+            const toggle = document.getElementById('dark-mode-toggle');
+            if (toggle) {
+                toggle.addEventListener('click', () => {
+                    CyberSignUtils.toggleDarkMode();
+                    toggle.textContent = CyberSignUtils.isDarkMode() ? '☀️' : '🌙';
+                });
+                // Set initial state
+                toggle.textContent = CyberSignUtils.isDarkMode() ? '☀️' : '🌙';
+            }
+        });
+    </script>
 </body>
 
 </html>

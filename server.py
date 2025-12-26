@@ -3,6 +3,8 @@ import io
 import json
 import base64
 import zipfile
+import time
+import uuid
 from typing import Optional, List
 from datetime import datetime
 
@@ -11,12 +13,32 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel
+from slowapi.errors import RateLimitExceeded
 
 from src.key_manager import KeyManager
 from src.signature_service import SignatureService
 from src.certificate_service import CertificateAuthority
 from src.models import SignatureResult, VerificationResult, Certificate
 from src.exceptions import KeyManagementError, SignatureError, VerificationError, CertificateError
+from src.logging_config import get_logger, set_correlation_id, get_correlation_id
+from src.rate_limiter import limiter, rate_limit_exceeded_handler, get_rate_limit
+from src.resource_guards import (
+    ResourceGuardMiddleware, 
+    validate_file_size, 
+    validate_message_length,
+    check_key_generation_limit,
+    resource_config
+)
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Initialize logger
+logger = get_logger(__name__)
 
 # --- Application Setup ---
 app = FastAPI(
@@ -24,6 +46,15 @@ app = FastAPI(
     description="Web interface for Digital Signature Validator tool",
     version="1.0.0"
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+
+# Add exception handler for rate limiting
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# Add resource guard middleware
+app.add_middleware(ResourceGuardMiddleware)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -34,6 +65,55 @@ templates = Jinja2Templates(directory="templates")
 # Initialize Services
 key_manager = KeyManager()
 signature_service = SignatureService()
+
+
+# --- Request Logging Middleware ---
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all API requests with correlation ID."""
+    # Generate correlation ID for request tracing
+    correlation_id = set_correlation_id()
+    
+    start_time = time.time()
+    
+    # Log request
+    logger.info("Request started", extra={'context': {
+        'method': request.method,
+        'path': request.url.path,
+        'client_ip': request.client.host if request.client else 'unknown',
+        'correlation_id': correlation_id
+    }})
+    
+    try:
+        response = await call_next(request)
+        
+        # Calculate duration
+        duration_ms = (time.time() - start_time) * 1000
+        
+        # Log response
+        logger.info("Request completed", extra={'context': {
+            'method': request.method,
+            'path': request.url.path,
+            'status_code': response.status_code,
+            'duration_ms': round(duration_ms, 2),
+            'correlation_id': correlation_id
+        }})
+        
+        # Add correlation ID to response headers
+        response.headers['X-Correlation-ID'] = correlation_id
+        
+        return response
+        
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        logger.error(f"Request failed: {str(e)}", extra={'context': {
+            'method': request.method,
+            'path': request.url.path,
+            'duration_ms': round(duration_ms, 2),
+            'error': str(e),
+            'correlation_id': correlation_id
+        }})
+        raise
 
 # --- Pydantic Models ---
 
@@ -76,16 +156,21 @@ async def read_root(request: Request):
 # --- Routes: API - Key Management ---
 
 @app.post("/api/keys/generate")
-async def generate_keys(request: GenerateKeyRequest):
+@limiter.limit(get_rate_limit('key_generate'))
+async def generate_keys(request: Request, data: GenerateKeyRequest):
     """Generate RSA key pair and return as JSON or ZIP."""
     try:
-        private_key, public_key = key_manager.generate_key_pair(request.key_size)
+        # Check hourly key generation limit
+        client_ip = request.client.host if request.client else 'unknown'
+        check_key_generation_limit(client_ip)
+        
+        private_key, public_key = key_manager.generate_key_pair(data.key_size)
         
         # Serialize Private Key
         from cryptography.hazmat.primitives import serialization
         encryption = (
-            serialization.BestAvailableEncryption(request.passphrase.encode())
-            if request.passphrase else serialization.NoEncryption()
+            serialization.BestAvailableEncryption(data.passphrase.encode())
+            if data.passphrase else serialization.NoEncryption()
         )
         
         private_pem = private_key.private_bytes(
@@ -110,7 +195,8 @@ async def generate_keys(request: GenerateKeyRequest):
 # --- Routes: API - Core Signing (Text) ---
 
 @app.post("/api/sign/message")
-async def sign_message(data: SignMessageRequest):
+@limiter.limit(get_rate_limit('sign'))
+async def sign_message(request: Request, data: SignMessageRequest):
     """Sign a text message."""
     try:
         # Load Private Key from PEM string
@@ -148,7 +234,8 @@ async def sign_message(data: SignMessageRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/verify/message")
-async def verify_message(data: VerifyMessageRequest):
+@limiter.limit(get_rate_limit('verify'))
+async def verify_message(request: Request, data: VerifyMessageRequest):
     """Verify a text message signature."""
     try:
         # Load Public Key
@@ -185,7 +272,9 @@ async def verify_message(data: VerifyMessageRequest):
 # --- Routes: API - File Operations ---
 
 @app.post("/api/sign/file")
+@limiter.limit(get_rate_limit('sign'))
 async def sign_file(
+    request: Request,
     file: UploadFile = File(...),
     private_key: UploadFile = File(...),
     passphrase: Optional[str] = Form(None)
@@ -229,7 +318,9 @@ async def sign_file(
          raise HTTPException(status_code=500, detail=f"File Signing Failed: {str(e)}")
 
 @app.post("/api/verify/file")
+@limiter.limit(get_rate_limit('verify'))
 async def verify_file(
+    request: Request,
     file: UploadFile = File(...),
     public_key: UploadFile = File(...),
     signature: str = Form(...) # Hex string passed as form field
@@ -277,7 +368,9 @@ async def verify_file(
 # --- Routes: API - Certificate Authority ---
 
 @app.post("/api/ca/create")
+@limiter.limit(get_rate_limit('ca'))
 async def create_ca(
+    request: Request,
     name: str = Form("Digital Signature CA"),
     passphrase: Optional[str] = Form(None)
 ):
@@ -313,7 +406,9 @@ async def create_ca(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ca/sign-certificate")
+@limiter.limit(get_rate_limit('ca'))
 async def sign_certificate(
+    request: Request,
     subject_name: str = Form(...),
     ca_private_key: UploadFile = File(...),
     subject_public_key: UploadFile = File(...),
@@ -351,7 +446,9 @@ async def sign_certificate(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ca/verify-certificate")
+@limiter.limit(get_rate_limit('verify'))
 async def verify_certificate_endpoint(
+    request: Request,
     certificate_file: UploadFile = File(...),
     ca_public_key: UploadFile = File(...)
 ):
@@ -382,7 +479,8 @@ async def verify_certificate_endpoint(
 # --- Routes: Logs ---
 
 @app.get("/api/logs")
-async def get_logs():
+@limiter.limit(get_rate_limit('logs'))
+async def get_logs(request: Request):
     """Get verification logs."""
     log_path = os.path.join("data", "verification_logs.json")
     if not os.path.exists(log_path):

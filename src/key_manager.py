@@ -13,6 +13,10 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from src.exceptions import KeyManagementError
 from src.validation import validate_key_size, validate_file_path, ValidationError
+from src.logging_config import get_logger, log_operation
+
+# Initialize module logger
+logger = get_logger(__name__)
 
 
 class KeyManager:
@@ -128,8 +132,16 @@ class KeyManager:
             )
             # Derive the public key from the private key
             public_key = private_key.public_key()
+            logger.info("Key pair generated successfully", extra={'context': {
+                'key_size': key_size,
+                'operation': 'generate_key_pair'
+            }})
             return private_key, public_key
         except Exception as e:
+            logger.error(f"Failed to generate key pair: {str(e)}", extra={'context': {
+                'key_size': key_size,
+                'error': str(e)
+            }})
             raise KeyManagementError(f"Failed to generate key pair: {str(e)}")
     
     def save_private_key(
@@ -186,8 +198,18 @@ class KeyManager:
             
             # Set restrictive file permissions (0600) to protect the private key
             self._set_private_key_permissions(filepath)
+            
+            logger.info("Private key saved", extra={'context': {
+                'filepath': filepath,
+                'encrypted': passphrase is not None,
+                'operation': 'save_private_key'
+            }})
                 
         except Exception as e:
+            logger.error(f"Failed to save private key: {str(e)}", extra={'context': {
+                'filepath': filepath,
+                'error': str(e)
+            }})
             raise KeyManagementError(f"Failed to save private key: {str(e)}")
     
     def save_public_key(
@@ -221,8 +243,17 @@ class KeyManager:
             # Write to file
             with open(filepath, 'wb') as f:
                 f.write(pem)
+            
+            logger.info("Public key saved", extra={'context': {
+                'filepath': filepath,
+                'operation': 'save_public_key'
+            }})
                 
         except Exception as e:
+            logger.error(f"Failed to save public key: {str(e)}", extra={'context': {
+                'filepath': filepath,
+                'error': str(e)
+            }})
             raise KeyManagementError(f"Failed to save public key: {str(e)}")
     
     def load_private_key(
@@ -267,9 +298,15 @@ class KeyManager:
             if not isinstance(private_key, rsa.RSAPrivateKey):
                 raise KeyManagementError("Loaded key is not an RSA private key")
             
+            logger.info("Private key loaded", extra={'context': {
+                'filepath': filepath,
+                'encrypted': passphrase is not None,
+                'operation': 'load_private_key'
+            }})
             return private_key
             
         except FileNotFoundError:
+            logger.error(f"Private key file not found: {filepath}")
             raise KeyManagementError(f"Private key file not found: {filepath}")
         except ValueError as e:
             # This typically happens with incorrect passphrase
@@ -315,9 +352,14 @@ class KeyManager:
             if not isinstance(public_key, rsa.RSAPublicKey):
                 raise KeyManagementError("Loaded key is not an RSA public key")
             
+            logger.info("Public key loaded", extra={'context': {
+                'filepath': filepath,
+                'operation': 'load_public_key'
+            }})
             return public_key
             
         except FileNotFoundError:
+            logger.error(f"Public key file not found: {filepath}")
             raise KeyManagementError(f"Public key file not found: {filepath}")
         except ValueError as e:
             raise KeyManagementError(f"Invalid key format: {str(e)}")

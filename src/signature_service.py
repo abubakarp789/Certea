@@ -16,6 +16,10 @@ from cryptography.exceptions import InvalidSignature
 from src.models import SignatureResult, VerificationResult
 from src.exceptions import SignatureError, VerificationError
 from src.logger_service import VerificationLogger
+from src.logging_config import get_logger
+
+# Initialize module logger
+logger = get_logger(__name__)
 
 
 class SignatureService:
@@ -154,6 +158,10 @@ class SignatureService:
         except SignatureError:
             raise
         except Exception as e:
+            logger.error(f"Failed to sign message: {str(e)}", extra={'context': {
+                'operation': 'sign_message',
+                'error': str(e)
+            }})
             raise SignatureError(f"Failed to sign message: {str(e)}")
 
     def sign_file(
@@ -202,13 +210,26 @@ class SignatureService:
                 padding_scheme=padding_scheme.upper()
             )
             
+            logger.info("File signed successfully", extra={'context': {
+                'operation': 'sign_file',
+                'filepath': filepath,
+                'padding': padding_scheme.upper(),
+                'message_digest': message_digest[:16] + '...'
+            }})
+            
             return result
             
         except FileNotFoundError:
+            logger.error(f"File not found: {filepath}")
             raise SignatureError(f"File not found: {filepath}")
         except SignatureError:
             raise
         except Exception as e:
+            logger.error(f"Failed to sign file: {str(e)}", extra={'context': {
+                'operation': 'sign_file',
+                'filepath': filepath,
+                'error': str(e)
+            }})
             raise SignatureError(f"Failed to sign file: {str(e)}")
     
     def verify_signature(

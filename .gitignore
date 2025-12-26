@@ -17,6 +17,7 @@ keys/
 
 # Logs and Data
 data/
+logs/
 *.log
 verification_logs.json
 signature.json

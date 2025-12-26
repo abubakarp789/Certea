@@ -16,6 +16,10 @@ from cryptography.exceptions import InvalidSignature
 from src.models import Certificate
 from src.exceptions import CertificateError
 from src.validation import validate_certificate_dates, validate_validity_days, ValidationError
+from src.logging_config import get_logger
+
+# Initialize module logger
+logger = get_logger(__name__)
 
 
 class CertificateAuthority:
@@ -101,9 +105,20 @@ class CertificateAuthority:
             # Sign the certificate using the Certificate's sign method
             certificate.sign(self.ca_private_key)
             
+            logger.info("Certificate issued", extra={'context': {
+                'subject': subject,
+                'issuer': self.ca_name,
+                'validity_days': validity_days,
+                'valid_until': valid_until.isoformat()
+            }})
+            
             return certificate
             
         except Exception as e:
+            logger.error(f"Failed to sign public key: {str(e)}", extra={'context': {
+                'subject': subject,
+                'error': str(e)
+            }})
             raise CertificateError(f"Failed to sign public key: {str(e)}")
     
     def verify_certificate(self, certificate: Certificate) -> bool:
@@ -129,13 +144,30 @@ class CertificateAuthority:
         """
         try:
             # Use the Certificate's verify method
-            return certificate.verify(self.ca_public_key)
+            result = certificate.verify(self.ca_public_key)
+            
+            logger.info("Certificate verified", extra={'context': {
+                'subject': certificate.subject,
+                'issuer': certificate.issuer,
+                'is_valid': result
+            }})
+            
+            return result
                 
         except ValueError as e:
             # Certificate expired or not yet valid
+            logger.warning(f"Certificate validation failed: {str(e)}", extra={'context': {
+                'subject': certificate.subject,
+                'reason': 'validity_period'
+            }})
             raise CertificateError(str(e))
         except InvalidSignature as e:
             # Invalid CA signature
+            logger.warning(f"Invalid CA signature on certificate", extra={'context': {
+                'subject': certificate.subject,
+                'reason': 'invalid_signature'
+            }})
             raise CertificateError(str(e))
         except Exception as e:
+            logger.error(f"Certificate verification failed: {str(e)}")
             raise CertificateError(f"Certificate verification failed: {str(e)}")
