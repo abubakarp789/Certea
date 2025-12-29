@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 from datetime import datetime
 from typing import List, Optional
 from src.models import LogEntry
@@ -12,6 +13,7 @@ class VerificationLogger:
     
     Attributes:
         log_file: Path to the JSON log file
+        _lock: Thread lock for concurrent write safety
     """
     
     def __init__(self, log_file: str = "data/verification_logs.json"):
@@ -28,6 +30,7 @@ class VerificationLogger:
             log_file: Path to the log file (default: data/verification_logs.json)
         """
         self.log_file = log_file
+        self._lock = threading.Lock()
         
         # Ensure the data directory exists
         log_dir = os.path.dirname(log_file)
@@ -72,15 +75,17 @@ class VerificationLogger:
             padding_scheme=padding_scheme
         )
         
-        # Read existing logs
-        logs = self._read_logs()
-        
-        # Append new entry
-        logs.append(log_entry.to_dict())
-        
-        # Write back to file
-        with open(self.log_file, 'w') as f:
-            json.dump(logs, f, indent=2)
+        # Use lock to ensure thread-safe writes
+        with self._lock:
+            # Read existing logs
+            logs = self._read_logs()
+            
+            # Append new entry
+            logs.append(log_entry.to_dict())
+            
+            # Write back to file
+            with open(self.log_file, 'w') as f:
+                json.dump(logs, f, indent=2)
     
     def get_logs(
         self,
@@ -124,8 +129,9 @@ class VerificationLogger:
     
     def clear_logs(self) -> None:
         """Clear all verification logs."""
-        with open(self.log_file, 'w') as f:
-            json.dump([], f)
+        with self._lock:
+            with open(self.log_file, 'w') as f:
+                json.dump([], f)
     
     def _read_logs(self) -> List[dict]:
         """Read logs from the JSON file.

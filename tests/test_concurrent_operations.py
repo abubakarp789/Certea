@@ -205,16 +205,16 @@ class TestParallelLogWrites:
                 if isinstance(result, Exception):
                     errors.append(result)
         
-        # Allow some errors due to file locking, but should be minimal
-        assert len(errors) < num_writes * 0.1, f"Too many errors: {errors}"
+        # With proper locking, there should be no errors
+        assert len(errors) == 0, f"Errors occurred: {errors}"
         
         # Add a small delay to ensure logs are written to disk
         import time
-        time.sleep(0.5)
+        time.sleep(0.1)
         
-        # Verify log file is valid JSON and has entries
+        # Verify log file is valid JSON and has all entries
         logs = logger.get_logs()
-        assert len(logs) > 0
+        assert len(logs) == num_writes, f"Expected {num_writes} logs, got {len(logs)}"
     
     def test_log_integrity_after_parallel_writes(self, data_dir):
         """Log file should remain valid after parallel writes."""

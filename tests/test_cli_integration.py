@@ -253,8 +253,7 @@ class TestCLISign:
         cli = CLI()
         
         with patch.object(cli.key_manager, 'load_private_key') as mock_load_key, \
-             patch.object(cli.signature_service, 'sign_message') as mock_sign, \
-             patch('src.cli.SignatureResult') as mock_result_class:
+             patch.object(cli.signature_service, 'sign_message') as mock_sign:
             
             # Mock key and signature result
             mock_load_key.return_value = MagicMock()
@@ -262,11 +261,8 @@ class TestCLISign:
             mock_sign_result.message_digest = "abc123"
             mock_sign_result.padding_scheme = "PSS"
             mock_sign_result.timestamp.isoformat.return_value = "2025-01-01T00:00:00"
+            mock_sign_result.to_file = MagicMock()  # Mock the to_file method
             mock_sign.return_value = mock_sign_result
-            
-            # Mock the SignatureResult class to_file method
-            mock_result_instance = MagicMock()
-            mock_result_class.return_value = mock_result_instance
             
             class Args:
                 message = "test message"
@@ -287,19 +283,23 @@ class TestCLISign:
         """Should sign file successfully."""
         cli = CLI()
         
+        # Create the test file
+        test_file = tmp_path / "test.txt"
+        test_file.write_text("test content")
+        
         with patch.object(cli.key_manager, 'load_private_key') as mock_load_key, \
-             patch.object(cli.signature_service, 'sign_file') as mock_sign, \
-             patch('builtins.open', create=True):
+             patch.object(cli.signature_service, 'sign_file') as mock_sign:
             
             mock_load_key.return_value = MagicMock()
             mock_sign_result = MagicMock()
             mock_sign_result.message_digest = "abc123"
             mock_sign_result.padding_scheme = "PSS"
             mock_sign_result.timestamp.isoformat.return_value = "2025-01-01T00:00:00"
+            mock_sign_result.to_file = MagicMock()
             mock_sign.return_value = mock_sign_result
             
             class Args:
-                file = str(tmp_path / "test.txt")
+                file = str(test_file)
                 private_key = "/path/to/key"
                 output = str(tmp_path / "output.sig")
                 passphrase = None
@@ -321,10 +321,14 @@ class TestCLIVerify:
         """Should verify signature successfully."""
         cli = CLI()
         
+        # Create the signature file
+        sig_file = tmp_path / "sig.sig"
+        sig_file.write_text('{"signature": "test"}')
+        
         with patch.object(cli.key_manager, 'load_public_key') as mock_load_pub, \
-             patch.object(cli.key_manager, 'load_private_key') as mock_load_priv, \
              patch('src.cli.SignatureResult') as mock_result_class, \
-             patch.object(cli.signature_service, 'verify_signature') as mock_verify:
+             patch.object(cli.signature_service, 'verify_signature') as mock_verify, \
+             patch.object(cli.logger, 'log_verification') as mock_log:
             
             # Mock public key
             mock_load_pub.return_value = MagicMock()
@@ -343,7 +347,7 @@ class TestCLIVerify:
             
             class Args:
                 message = "test message"
-                signature = str(tmp_path / "sig.sig")
+                signature = str(sig_file)
                 public_key = "/path/to/pub"
                 padding = "PSS"
             
@@ -483,6 +487,12 @@ class TestCLICertificateCommands:
         """Should sign certificate successfully."""
         cli = CLI()
         
+        # Create the required files
+        pub_file = tmp_path / "pub.pem"
+        pub_file.write_text("-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----")
+        ca_file = tmp_path / "ca.pem"
+        ca_file.write_text("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----")
+        
         with patch.object(cli.key_manager, 'load_private_key') as mock_load_ca, \
              patch.object(cli.key_manager, 'load_public_key') as mock_load_pub, \
              patch('src.cli.CertificateAuthority') as mock_ca_class, \
@@ -491,15 +501,23 @@ class TestCLICertificateCommands:
             mock_ca_instance = MagicMock()
             mock_cert = MagicMock()
             mock_cert.to_dict.return_value = {"subject": "test"}
+            mock_cert.subject = "Test Subject"
+            mock_cert.issuer = "CA"
+            mock_cert.valid_from = MagicMock()
+            mock_cert.valid_from.isoformat.return_value = "2025-01-01T00:00:00"
+            mock_cert.valid_until = MagicMock()
+            mock_cert.valid_until.isoformat.return_value = "2026-01-01T00:00:00"
             mock_ca_instance.sign_public_key.return_value = mock_cert
             mock_ca_class.return_value = mock_ca_instance
             
-            mock_load_ca.return_value = MagicMock()
+            mock_priv_key = MagicMock()
+            mock_priv_key.public_key.return_value = MagicMock()
+            mock_load_ca.return_value = mock_priv_key
             mock_load_pub.return_value = MagicMock()
             
             class Args:
-                public_key = str(tmp_path / "pub.pem")
-                ca_key = str(tmp_path / "ca.pem")
+                public_key = str(pub_file)
+                ca_key = str(ca_file)
                 subject = "Test Subject"
                 output = str(tmp_path / "cert.json")
                 days = 365
@@ -516,20 +534,24 @@ class TestCLICertificateCommands:
         """Should verify certificate successfully."""
         cli = CLI()
         
-        with patch('builtins.open', create=True) as mock_open, \
-             patch.object(cli.key_manager, 'load_public_key') as mock_load_pub, \
-             patch('json.load') as mock_json_load, \
+        # Create the required files
+        cert_file = tmp_path / "cert.json"
+        cert_file.write_text('{"subject": "test"}')
+        ca_pub_file = tmp_path / "ca.pub"
+        ca_pub_file.write_text("-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----")
+        
+        with patch.object(cli.key_manager, 'load_public_key') as mock_load_pub, \
              patch('src.cli.Certificate') as mock_cert_class, \
              patch('src.cli.CertificateAuthority') as mock_ca_class:
             
-            # Mock file content
-            mock_file = MagicMock()
-            mock_file.__enter__.return_value = mock_file
-            mock_file.read.return_value = '{"subject": "test"}'
-            mock_open.return_value = mock_file
-            
             # Mock certificate
             mock_cert = MagicMock()
+            mock_cert.subject = "test"
+            mock_cert.issuer = "CA"
+            mock_cert.valid_from = MagicMock()
+            mock_cert.valid_from.isoformat.return_value = "2025-01-01T00:00:00"
+            mock_cert.valid_until = MagicMock()
+            mock_cert.valid_until.isoformat.return_value = "2026-01-01T00:00:00"
             mock_cert_class.from_dict.return_value = mock_cert
             
             # Mock CA
@@ -538,11 +560,10 @@ class TestCLICertificateCommands:
             mock_ca_class.return_value = mock_ca_instance
             
             mock_load_pub.return_value = MagicMock()
-            mock_json_load.return_value = {"subject": "test"}
             
             class Args:
-                certificate = str(tmp_path / "cert.json")
-                ca_public_key = str(tmp_path / "ca.pub")
+                certificate = str(cert_file)
+                ca_public_key = str(ca_pub_file)
             
             args = Args()
             

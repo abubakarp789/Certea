@@ -323,12 +323,12 @@ class TestCLIIntegration:
     
     def test_invalid_command(self, cli):
         """Test handling of invalid command."""
-        # argparse raises SystemExit for invalid commands
-        with pytest.raises(SystemExit) as exc_info:
-            cli.run(['invalid-command'])
-        assert exc_info.value.code == 2
+        # CLI now catches SystemExit and returns 1
+        exit_code = cli.run(['invalid-command'])
+        assert exit_code == 1
     
     def test_missing_required_arguments(self, cli):
         """Test handling of missing required arguments."""
-        with pytest.raises(SystemExit):
-            cli.run(['sign'])
+        # CLI now catches SystemExit and returns 1
+        exit_code = cli.run(['sign'])
+        assert exit_code == 1
