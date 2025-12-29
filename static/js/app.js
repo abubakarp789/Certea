@@ -35,14 +35,15 @@ function showToast(message, type = 'info') {
     const toast = document.createElement('div');
 
     // Icon selection
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
+    let icon = 'info';
+    if (type === 'success') icon = 'check-circle';
+    if (type === 'error') icon = 'alert-triangle';
 
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-
+    toast.innerHTML = `<i data-lucide="${icon}"></i> <span>${message}</span>`;
+    
     container.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
 
     // Trigger animation
     requestAnimationFrame(() => {
@@ -507,6 +508,7 @@ async function loadLogs() {
             `;
             tbody.appendChild(row);
         });
+        if (window.lucide) lucide.createIcons();
     } catch (err) {
         tbody.innerHTML = '<tr><td colspan="4">Failed to load logs</td></tr>';
     }
