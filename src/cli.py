@@ -36,8 +36,36 @@ from src.validation import (
 
 
 class CLI:
-    """Command-line interface for the Digital Signature Validator."""
-    
+    \"\"\"Command-line interface for the Digital Signature Validator.\"\"\"
+
+    def _prompt_passphrase(self, prompt: str = "Enter passphrase: ", max_retries: int = 3) -> str:
+        \"\"\"Prompt for passphrase with multiple retries.
+
+        Args:
+            prompt: The prompt message
+            max_retries: Maximum number of attempts
+
+        Returns:
+            The entered passphrase
+
+        Raises:
+            ValueError: If max retries exceeded
+        \"\"\"
+        for attempt in range(max_retries):
+            try:
+                passphrase = getpass.getpass(prompt)
+                return passphrase
+            except KeyboardInterrupt:
+                print("\\nOperation cancelled.")
+                sys.exit(1)
+            except Exception:
+                if attempt < max_retries - 1:
+                    print(f"Failed to read passphrase. {max_retries - attempt - 1} attempts remaining.")
+                else:
+                    raise ValueError("Failed to read passphrase after multiple attempts")
+
+        raise ValueError("Passphrase input failed")
+
     def __init__(self):
         """Initialize the CLI with service instances.
         

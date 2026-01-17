@@ -2,6 +2,8 @@
 
 A Python-based cryptographic tool for creating and verifying digital signatures using RSA asymmetric encryption and SHA-256 hashing. This tool demonstrates core concepts of digital signatures including message authenticity, integrity verification, and non-repudiation.
 
+**NEW: Modern Next.js Frontend** - Professional web interface for all cryptographic operations.
+
 ## Features
 
 - **RSA Key Pair Generation**: Generate secure 2048-bit (or larger) RSA key pairs with optional passphrase protection
@@ -13,6 +15,147 @@ A Python-based cryptographic tool for creating and verifying digital signatures 
 - **Secure Key Storage**: Private keys stored with restricted file permissions and optional AES-256 encryption
 
 ## Installation
+
+### Backend (Python)
+
+#### Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+
+#### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+The main dependency is `cryptography` library, which provides cryptographic primitives.
+
+### Frontend (Next.js)
+
+#### Prerequisites
+
+- Node.js 18+ and npm
+- Python backend running on http://localhost:8000
+
+#### Install Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+#### Run Frontend
+
+```bash
+npm run dev
+```
+
+Frontend will be available at [http://localhost:3000](http://localhost:3000)
+
+#### Build Frontend for Production
+
+```bash
+npm run build
+npm start
+```
+
+npm run build
+npm start
+```
+
+## Configuration
+
+The application can be configured using environment variables, typically stored in a `.env` file in the root directory.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ALLOWED_ORIGINS` | JSON list or comma-separated list of allowed CORS origins | `["http://localhost:3000", "http://localhost:3001"]` |
+| `DEBUG` | Enable debug mode (true/false) | `false` |
+
+## Setup Guide
+
+### Backend CORS Configuration
+
+The backend needs CORS enabled to allow requests from the frontend. Add this to `server.py`:
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+### Frontend Configuration
+
+Create `.env.local` in the `frontend/` directory:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+### Run Full Stack
+
+**Terminal 1 - Start Backend:**
+```bash
+cd "Cyber Security Project"
+python server.py
+```
+
+**Terminal 2 - Start Frontend:**
+```bash
+cd "Cyber Security Project/frontend"
+npm run dev
+```
+
+Now access [http://localhost:3000](http://localhost:3000) to use the web interface.
+
+### Deployment
+
+#### Development
+
+- **Backend**: Python backend runs on port 8000
+- **Frontend**: Next.js dev server runs on port 3000
+- **API Proxy**: Next.js rewrites `/api/*` to backend
+
+#### Production
+
+Option 1: **Serve from Same Domain (Recommended)**
+```
+https://cybersign.com/
+  → /api/*  → Python backend (port 8000)
+  → /*       → Next.js frontend (port 3000)
+```
+
+Option 2: **Serve from Different Domains**
+```
+Frontend: https://app.cybersign.com
+Backend:  https://api.cybersign.com
+```
+
+See `frontend/README.md` for detailed deployment instructions.
+
+## Usage
+
+### Web Interface (Recommended)
+
+Navigate to [http://localhost:3000](http://localhost:3000) and use the modern web interface to:
+- Generate RSA key pairs
+- Sign and verify text messages
+- Sign and verify files
+- Manage certificates through CA
+- View audit logs
+
+All features accessible through intuitive UI with real-time feedback.
+
+### Command Line Interface (CLI)
+
+**Generate Key Pair**
 
 ### Prerequisites
 

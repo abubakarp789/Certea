@@ -30,3 +30,8 @@ signature.json
 
 plan.md
 
+# Generated Bundles and CA
+ca/
+*.zip
+.env.*
+
