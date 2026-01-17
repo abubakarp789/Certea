@@ -1,6 +1,6 @@
-# CyberSign Frontend
+# Certea Frontend
 
-Modern, professional Next.js frontend for the CyberSign Digital Signature Validator.
+Modern, professional Next.js frontend for the Certea Digital Signature Validator.
 
 ## Features
 
@@ -37,7 +37,7 @@ Modern, professional Next.js frontend for the CyberSign Digital Signature Valida
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Python backend running on http://localhost:8000
+- Python backend running on http://localhost:8000 (Ensure it is started using `uv run server.py`)
 
 ### Installation
 
@@ -170,7 +170,7 @@ CMD ["npm", "start"]
 ```nginx
 server {
     listen 80;
-    server_name cybersign.com;
+    server_name certea.com;
 
     # Frontend (Next.js)
     location / {

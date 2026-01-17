@@ -1,6 +1,6 @@
-# Digital Signature Validator
+# Certea: Digital Signature Validator
 
-A Python-based cryptographic tool for creating and verifying digital signatures using RSA asymmetric encryption and SHA-256 hashing. This tool demonstrates core concepts of digital signatures including message authenticity, integrity verification, and non-repudiation.
+A Python-based cryptographic tool for creating and verifying digital signatures using RSA asymmetric encryption and SHA-256 hashing. **Certea** demonstrates core concepts of digital signatures including message authenticity, integrity verification, and non-repudiation.
 
 **NEW: Modern Next.js Frontend** - Professional web interface for all cryptographic operations.
 
@@ -104,7 +104,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 **Terminal 1 - Start Backend:**
 ```bash
 cd "Cyber Security Project"
-python server.py
+uv run server.py
 ```
 
 **Terminal 2 - Start Frontend:**
@@ -127,15 +127,15 @@ Now access [http://localhost:3000](http://localhost:3000) to use the web interfa
 
 Option 1: **Serve from Same Domain (Recommended)**
 ```
-https://cybersign.com/
+https://certea.com/
   → /api/*  → Python backend (port 8000)
   → /*       → Next.js frontend (port 3000)
 ```
 
 Option 2: **Serve from Different Domains**
 ```
-Frontend: https://app.cybersign.com
-Backend:  https://api.cybersign.com
+Frontend: https://app.certea.com
+Backend:  https://api.certea.com
 ```
 
 See `frontend/README.md` for detailed deployment instructions.
@@ -159,13 +159,12 @@ All features accessible through intuitive UI with real-time feedback.
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- pip package manager
+- [uv](https://github.com/astral-sh/uv)
 
 ### Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 The main dependency is the `cryptography` library, which provides the cryptographic primitives.
@@ -179,19 +178,19 @@ The Digital Signature Validator provides a command-line interface with several s
 Generate a new RSA key pair with optional passphrase protection:
 
 ```bash
-python main.py generate-keys --output-dir ./keys
+uv run main.py generate-keys --output-dir ./keys
 ```
 
 With passphrase protection:
 
 ```bash
-python main.py generate-keys --output-dir ./keys --passphrase "your-secure-passphrase"
+uv run main.py generate-keys --output-dir ./keys --passphrase "your-secure-passphrase"
 ```
 
 With custom key size:
 
 ```bash
-python main.py generate-keys --output-dir ./keys --key-size 4096
+uv run main.py generate-keys --output-dir ./keys --key-size 4096
 ```
 
 ### Sign a Message
@@ -199,19 +198,19 @@ python main.py generate-keys --output-dir ./keys --key-size 4096
 Sign a text message:
 
 ```bash
-python main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json
+uv run main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json
 ```
 
 With PSS padding (default, recommended):
 
 ```bash
-python main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json --padding PSS
+uv run main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json --padding PSS
 ```
 
 With PKCS#1 v1.5 padding (deterministic):
 
 ```bash
-python main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json --padding PKCS1
+uv run main.py sign --message "Hello, World!" --private-key ./keys/private_key.pem --output ./signature.json --padding PKCS1
 ```
 
 ### Sign a File
@@ -219,7 +218,7 @@ python main.py sign --message "Hello, World!" --private-key ./keys/private_key.p
 Sign a file:
 
 ```bash
-python main.py sign-file --file ./document.pdf --private-key ./keys/private_key.pem --output ./signature.json
+uv run main.py sign-file --file ./document.pdf --private-key ./keys/private_key.pem --output ./signature.json
 ```
 
 ### Verify a Message Signature
@@ -227,7 +226,7 @@ python main.py sign-file --file ./document.pdf --private-key ./keys/private_key.
 Verify a signature for a text message:
 
 ```bash
-python main.py verify --message "Hello, World!" --signature ./signature.json --public-key ./keys/public_key.pem
+uv run main.py verify --message "Hello, World!" --signature ./signature.json --public-key ./keys/public_key.pem
 ```
 
 ### Verify a File Signature
@@ -235,7 +234,7 @@ python main.py verify --message "Hello, World!" --signature ./signature.json --p
 Verify a signature for a file:
 
 ```bash
-python main.py verify-file --file ./document.pdf --signature ./signature.json --public-key ./keys/public_key.pem
+uv run main.py verify-file --file ./document.pdf --signature ./signature.json --public-key ./keys/public_key.pem
 ```
 
 ### View Verification Logs
@@ -243,13 +242,13 @@ python main.py verify-file --file ./document.pdf --signature ./signature.json --
 Display all verification attempts:
 
 ```bash
-python main.py show-logs
+uv run main.py show-logs
 ```
 
 Filter logs by date range:
 
 ```bash
-python main.py show-logs --start-date 2024-01-01 --end-date 2024-12-31
+uv run main.py show-logs --start-date 2024-01-01 --end-date 2024-12-31
 ```
 
 ### Certificate Authority Operations
@@ -257,19 +256,19 @@ python main.py show-logs --start-date 2024-01-01 --end-date 2024-12-31
 Create a Certificate Authority:
 
 ```bash
-python main.py create-ca --output-dir ./ca
+uv run main.py create-ca --output-dir ./ca
 ```
 
 Sign a public key to create a certificate:
 
 ```bash
-python main.py sign-certificate --public-key ./keys/public_key.pem --ca-key ./ca/ca_private_key.pem --subject "John Doe" --output ./certificate.json --days 365
+uv run main.py sign-certificate --public-key ./keys/public_key.pem --ca-key ./ca/ca_private_key.pem --subject "John Doe" --output ./certificate.json --days 365
 ```
 
 Verify a certificate:
 
 ```bash
-python main.py verify-certificate --certificate ./certificate.json --ca-public-key ./ca/ca_public_key.pem
+uv run main.py verify-certificate --certificate ./certificate.json --ca-public-key ./ca/ca_public_key.pem
 ```
 
 ## Security Considerations
@@ -353,28 +352,29 @@ On Windows, setting file permissions may require administrator privileges or may
 
 ```
 digital-signature-validator/
-├── src/
+├── .env                        # Backend environment variables
+├── src/                        # Source code
 │   ├── __init__.py
 │   ├── key_manager.py          # RSA key generation and management
 │   ├── signature_service.py    # Signing and verification operations
 │   ├── logger_service.py       # Verification audit logging
 │   ├── certificate_service.py  # Certificate Authority operations
-│   ├── models.py               # Data models (SignatureResult, Certificate, etc.)
-│   ├── exceptions.py           # Custom exception classes
-│   ├── validation.py           # Input validation utilities
+│   ├── models.py               # Data models
+│   ├── exceptions.py           # Custom exceptions
+│   ├── validation.py           # Input validation
 │   └── cli.py                  # Command-line interface
-├── tests/
-│   ├── __init__.py
-│   ├── test_key_manager.py
-│   ├── test_signature_service.py
-│   ├── test_logger_service.py
-│   ├── test_certificate_service.py
-│   └── test_cli.py
-├── data/
-│   └── verification_logs.json  # Verification audit log
+├── frontend/                   # Next.js Frontend
+│   ├── app/                    # App Router pages
+│   ├── components/             # React components
+│   └── ...
+├── tests/                      # Test suite
+│   └── ...
+├── data/                       # Data storage
+│   └── verification_logs.json  # Audit logs
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # This file
-└── main.py                     # Application entry point
+├── server.py                   # FastAPI Backend
+└── main.py                     # CLI entry point
 ```
 
 ## How It Works
@@ -412,32 +412,32 @@ The CA functionality simulates a simplified X.509 certificate workflow:
 
 ```bash
 # 1. Generate a key pair
-python main.py generate-keys --output-dir ./alice_keys
+uv run main.py generate-keys --output-dir ./alice_keys
 
 # 2. Sign a message
-python main.py sign --message "This is a secret message" --private-key ./alice_keys/private_key.pem --output ./message_signature.json
+uv run main.py sign --message "This is a secret message" --private-key ./alice_keys/private_key.pem --output ./message_signature.json
 
 # 3. Verify the signature
-python main.py verify --message "This is a secret message" --signature ./message_signature.json --public-key ./alice_keys/public_key.pem
+uv run main.py verify --message "This is a secret message" --signature ./message_signature.json --public-key ./alice_keys/public_key.pem
 
 # 4. View verification logs
-python main.py show-logs
+uv run main.py show-logs
 ```
 
 ### Certificate Authority Example
 
 ```bash
 # 1. Create a Certificate Authority
-python main.py create-ca --output-dir ./ca
+uv run main.py create-ca --output-dir ./ca
 
 # 2. Generate a user key pair
-python main.py generate-keys --output-dir ./bob_keys
+uv run main.py generate-keys --output-dir ./bob_keys
 
 # 3. Sign Bob's public key to create a certificate
-python main.py sign-certificate --public-key ./bob_keys/public_key.pem --ca-key ./ca/ca_private_key.pem --subject "Bob Smith" --output ./bob_certificate.json
+uv run main.py sign-certificate --public-key ./bob_keys/public_key.pem --ca-key ./ca/ca_private_key.pem --subject "Bob Smith" --output ./bob_certificate.json
 
 # 4. Verify Bob's certificate
-python main.py verify-certificate --certificate ./bob_certificate.json --ca-public-key ./ca/ca_public_key.pem
+uv run main.py verify-certificate --certificate ./bob_certificate.json --ca-public-key ./ca/ca_public_key.pem
 ```
 
 ## Testing
@@ -445,13 +445,13 @@ python main.py verify-certificate --certificate ./bob_certificate.json --ca-publ
 Run the test suite:
 
 ```bash
-pytest tests/
+uv run pytest tests/
 ```
 
 Run tests with coverage:
 
 ```bash
-pytest tests/ --cov=src --cov-report=html
+uv run pytest tests/ --cov=src --cov-report=html
 ```
 
 ## License

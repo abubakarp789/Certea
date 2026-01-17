@@ -48,8 +48,8 @@ logger = get_logger(__name__)
 
 # --- Application Setup ---
 app = FastAPI(
-    title="Digital Signature Validator",
-    description="Web interface for Digital Signature Validator tool",
+    title="Certea Digital Signature Validator",
+    description="Web interface for Certea Digital Signature Validator tool",
     version="1.0.0",
 )
 
