@@ -167,7 +167,7 @@ class SignMessageRequest(BaseModel):
     @field_validator("private_key_pem")
     @classmethod
     def validate_private_key_pem(cls, v):
-        return sanitize_string_input(v, max_length=10000)
+        return sanitize_string_input(v, max_length=10000, allow_newlines=True)
 
 
 class VerifyMessageRequest(BaseModel):
@@ -178,7 +178,7 @@ class VerifyMessageRequest(BaseModel):
     @field_validator("public_key_pem")
     @classmethod
     def validate_public_key_pem(cls, v):
-        return sanitize_string_input(v, max_length=10000)
+        return sanitize_string_input(v, max_length=10000, allow_newlines=True)
 
 
 class CreateCARequest(BaseModel):

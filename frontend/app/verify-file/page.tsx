@@ -6,6 +6,7 @@ import { Loader2, Upload, CheckCircle, XCircle, File } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
 import { VerifyFileResponse } from '@/lib/types';
+import { CopyButton } from '@/components/ui/CopyButton';
 
 export default function VerifyFilePage() {
   const { showToast } = useToast();
@@ -118,9 +119,8 @@ export default function VerifyFilePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`mt-6 glass rounded-2xl p-8 border-2 ${
-            result.is_valid ? 'border-success/50' : 'border-error/50'
-          }`}
+          className={`mt-6 glass rounded-2xl p-8 border-2 ${result.is_valid ? 'border-success/50' : 'border-error/50'
+            }`}
         >
           <div className="flex items-center gap-4 mb-6">
             {result.is_valid ? (
@@ -133,19 +133,28 @@ export default function VerifyFilePage() {
                 {result.is_valid ? 'FILE IS AUTHENTIC' : 'FILE CORRUPTED / INVALID'}
               </h2>
               <p className="text-text-secondary">
-                {result.is_valid 
-                  ? 'Matches signature. File matches the original.' 
+                {result.is_valid
+                  ? 'Matches signature. File matches the original.'
                   : result.error_message || 'Signature does NOT match this file.'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-text-muted pt-4 border-t border-glass-border">
-            <span className="font-semibold">File Digest:</span>
-            <span className="font-mono text-accent">{result.file_digest}</span>
+
+          <div className="pt-4 border-t border-glass-border">
+            <div className="flex items-start justify-between mb-2">
+              <label className="text-sm font-bold text-text-muted uppercase tracking-wider">
+                File Digest (Calculated)
+              </label>
+              <CopyButton text={result.file_digest} />
+            </div>
+            <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono">
+              {result.file_digest}
+            </pre>
           </div>
         </motion.div>
-      )}
-    </motion.div>
+      )
+      }
+    </motion.div >
   );
 }
 
@@ -169,9 +178,8 @@ function FileUpload({ label, file, setFile, accept, icon }: any) {
           onChange={handleFileUpload}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${
-          file ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
-        }`}>
+        <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${file ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
+          }`}>
           {file ? (
             <>
               <File className="w-8 h-8 text-success" />

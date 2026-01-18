@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Upload, Copy } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
 import { SignMessageRequest, SignMessageResponse } from '@/lib/types';
-import { copyToClipboard } from '@/lib/utils';
+import { CopyButton } from '@/components/ui/CopyButton';
 
 export default function SignTextPage() {
   const { showToast } = useToast();
@@ -54,13 +54,7 @@ export default function SignTextPage() {
     }
   };
 
-  const copySignature = async () => {
-    if (!signature) return;
-    const success = await copyToClipboard(signature.signature);
-    if (success) {
-      showToast('Signature copied to clipboard!', 'success');
-    }
-  };
+
 
   return (
     <motion.div
@@ -90,9 +84,8 @@ export default function SignTextPage() {
                 onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${
-                keyFile ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
-              }`}>
+              <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${keyFile ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
+                }`}>
                 <Upload className={`w-8 h-8 ${keyFile ? 'text-success' : 'text-accent opacity-60'}`} />
                 <span className={`text-sm font-medium ${keyFile ? 'text-success' : 'text-text-secondary'}`}>
                   {keyFile ? `Selected: ${keyFile.name}` : 'Drag & drop private_key.pem here or click to browse'}
@@ -156,17 +149,23 @@ export default function SignTextPage() {
             <label className="text-sm font-bold text-text-muted uppercase tracking-wider">
               Signature (Hex)
             </label>
-            <button
-              onClick={copySignature}
-              className="flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors font-medium text-sm"
-            >
-              <Copy className="w-4 h-4" />
-              Copy
-            </button>
+            <CopyButton text={signature.signature} />
           </div>
           <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono">
             {signature.signature}
           </pre>
+
+          <div className="mt-6">
+            <div className="flex items-start justify-between mb-2">
+              <label className="text-sm font-bold text-text-muted uppercase tracking-wider">
+                Message Digest (SHA-256)
+              </label>
+              <CopyButton text={signature.message_digest} />
+            </div>
+            <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono">
+              {signature.message_digest}
+            </pre>
+          </div>
         </motion.div>
       )}
     </motion.div>

@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Upload, Copy, File } from 'lucide-react';
+import { Loader2, Upload, File } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
 import { SignFileResponse } from '@/lib/types';
-import { copyToClipboard } from '@/lib/utils';
+import { CopyButton } from '@/components/ui/CopyButton';
 
 export default function SignFilePage() {
   const { showToast } = useToast();
@@ -47,13 +47,7 @@ export default function SignFilePage() {
     }
   };
 
-  const copySignature = async () => {
-    if (!result) return;
-    const success = await copyToClipboard(result.signature);
-    if (success) {
-      showToast('Signature copied to clipboard!', 'success');
-    }
-  };
+
 
   return (
     <motion.div
@@ -129,21 +123,21 @@ export default function SignFilePage() {
             <label className="text-sm font-bold text-text-muted uppercase tracking-wider">
               Generated Signature (Hex)
             </label>
-            <button
-              onClick={copySignature}
-              className="flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors font-medium text-sm"
-            >
-              <Copy className="w-4 h-4" />
-              Copy
-            </button>
+            <CopyButton text={result.signature} />
           </div>
-          <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono mb-4 max-h-32">
+          <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono mb-6 max-h-32">
             {result.signature}
           </pre>
-          <div className="flex items-center gap-2 text-sm text-text-muted">
-            <span className="font-semibold">SHA-256 Digest:</span>
-            <span className="font-mono text-accent">{result.message_digest}</span>
+
+          <div className="flex items-start justify-between mb-2">
+            <label className="text-sm font-bold text-text-muted uppercase tracking-wider">
+              SHA-256 Digest
+            </label>
+            <CopyButton text={result.message_digest} />
           </div>
+          <pre className="bg-black/40 rounded-xl p-4 overflow-x-auto text-sm text-text-secondary font-mono">
+            {result.message_digest}
+          </pre>
         </motion.div>
       )}
     </motion.div>
@@ -170,9 +164,8 @@ function FileUpload({ label, file, setFile, accept, icon }: any) {
           onChange={handleFileUpload}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${
-          file ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
-        }`}>
+        <div className={`flex flex-col items-center justify-center gap-3 px-4 py-8 rounded-xl border-2 border-dashed transition-all ${file ? 'border-success bg-success/10' : 'border-glass-border bg-white/5 hover:border-accent/50 hover:bg-accent/5'
+          }`}>
           {file ? (
             <>
               <File className="w-8 h-8 text-success" />
